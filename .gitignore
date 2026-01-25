@@ -38,3 +38,6 @@ celerybeat.pid
 *.rdb
 *.aof
 *.pid
+
+# [convention] dmp prefix
+dmp_*
