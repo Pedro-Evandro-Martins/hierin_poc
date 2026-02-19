@@ -18,7 +18,7 @@ class FileValidator:
 
     def resolve(self, file_path: str) -> str:
         if not self._validate(file_path):
-            raise BadParameter(f"File validation failed for {file_path}")
+            raise BadParameter(f"[ERROR] File validation failed for {file_path}")
 
         abs_path = str(pathlib.Path(file_path).resolve())
 
@@ -27,14 +27,14 @@ class FileValidator:
     def _validate(self, file_path: str) -> bool:
         is_file = os.path.isfile(file_path)
         if not is_file:
-            raise BadParameter(f"The file {file_path} does not exist.")
+            raise BadParameter(f"[ERROR] The file {file_path} does not exist.")
 
         resolved_path = pathlib.Path(file_path).resolve()
         file_extension = resolved_path.suffix.lower().lstrip(".")
 
         if file_extension not in self.allowed_formats:
             raise BadParameter(
-                f"Invalid file format: .{file_extension}. Allowed formats are: {
+                f"[ERROR] Invalid file format: .{file_extension}. Allowed formats are: {
                     self.allowed_formats
                 }"
             )
@@ -43,8 +43,9 @@ class FileValidator:
             file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
             if file_size_mb > self.max_size_mb:
                 raise BadParameter(
-                    f"File size exceeds the maximum limit of {
-                        self.max_size_mb}MB"
+                    f"[ERROR] File size exceeds the maximum limit of {
+                        self.max_size_mb
+                    }MB"
                 )
 
         return True
