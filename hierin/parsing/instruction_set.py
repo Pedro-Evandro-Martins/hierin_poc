@@ -1,6 +1,6 @@
 from typing import List, Optional, Self
 
-from hierin.algorithms import HierIN
+from hierin.algorithms import HierINProcessor
 from hierin.io import ImageData
 
 
@@ -9,8 +9,8 @@ class InstructionSet:
         self.base_depth: int = base_depth
         self.targets: List[int] = targets if targets else []
 
-    def call_hierin(self, image_data: ImageData) -> HierIN:
-        return HierIN()
+    def call_hierin(self, image_data: ImageData) -> HierINProcessor:
+        return HierINProcessor()
 
 
 class InstructionSetBuilder:

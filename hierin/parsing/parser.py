@@ -1,14 +1,15 @@
 from typing import Optional
 
+from hierin.algorithms import HierINProcessor
 from hierin.io import ImageData, TargetsData
 from hierin.parsing import InstructionSetBuilder
 
 
 class Parser:
     @staticmethod
-    def parse(
+    def parse_processor(
         image: ImageData, base_depth: int = 0, targets: Optional[TargetsData] = None
-    ):
+    ) -> HierINProcessor:
         instruction_set_builder = InstructionSetBuilder()
 
         instruction_set = (
@@ -19,4 +20,4 @@ class Parser:
 
         # TODO
 
-        return None
+        return HierINProcessor()

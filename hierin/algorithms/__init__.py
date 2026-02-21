@@ -1,3 +1,3 @@
-from hierin_controller import HierIN
+from hierin_controller import HierINProcessor
 
-__all__ = ["HierIN"]
+__all__ = ["HierINProcessor"]

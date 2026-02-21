@@ -1,5 +1,6 @@
 from typing import Optional
 
+from hierin.algorithms import HierINProcessor
 from hierin.io import ImageData, ImageLoader, TargetsData, TargetsLoader
 from hierin.parsing import Parser
 
@@ -19,7 +20,7 @@ class HierINController:
 
         print(image_data)
 
-        parsed = ParsingController.parse(
+        parsed = ParsingController.parse_processor(
             image_data, self.payload.base_depth, targets_data
         )
 
@@ -45,10 +46,10 @@ class IOController:
 
 class ParsingController:
     @staticmethod
-    def parse(image_data: ImageData, base_depth: int, targets: Optional[TargetsData]):
-        parsed = Parser.parse(image_data, base_depth, targets)
-
-        pass
+    def parse_processor(
+        image_data: ImageData, base_depth: int, targets: Optional[TargetsData]
+    ) -> HierINProcessor:
+        return Parser.parse_controller(image_data, base_depth, targets)
 
 
 class ProcessingController:
