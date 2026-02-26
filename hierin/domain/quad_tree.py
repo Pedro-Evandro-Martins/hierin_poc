@@ -9,22 +9,75 @@ class Children(Generic[T]):
     __slots__ = ["tr", "tl", "bl", "br"]
 
     def __init__(self, parent: QuadTreeNode[T]):
-        self.tr: QuadTreeNode[T] = QuadTreeNode(parent.quadtree, parent=parent)
-        self.tl: QuadTreeNode[T] = QuadTreeNode(parent.quadtree, parent=parent)
-        self.bl: QuadTreeNode[T] = QuadTreeNode(parent.quadtree, parent=parent)
-        self.br: QuadTreeNode[T] = QuadTreeNode(parent.quadtree, parent=parent)
+        half_width: int = parent.width // 2
+        half_height: int = parent.height // 2
+
+        left_width: int = half_width
+        right_width: int = parent.width - half_width
+
+        top_height: int = half_height
+        bottom_height: int = parent.height - half_height
+
+        # Top Right - Path=1
+        self.tr: QuadTreeNode[T] = QuadTreeNode(
+            quadtree=parent.quadtree,
+            width=right_width,
+            height=top_height,
+            x_coord=parent.x + left_width,
+            y_coord=parent.y,
+            parent=parent,
+        )
+
+        # Top Left - Path=2
+        self.tl: QuadTreeNode[T] = QuadTreeNode(
+            quadtree=parent.quadtree,
+            width=left_width,
+            height=top_height,
+            x_coord=parent.x,
+            y_coord=parent.y,
+            parent=parent,
+        )
+
+        # Bottom Left - Path=3
+        self.bl: QuadTreeNode[T] = QuadTreeNode(
+            quadtree=parent.quadtree,
+            width=left_width,
+            height=bottom_height,
+            x_coord=parent.x,
+            y_coord=parent.y + top_height,
+            parent=parent,
+        )
+
+        # Bottom Right - Path=4
+        self.br: QuadTreeNode[T] = QuadTreeNode(
+            quadtree=parent.quadtree,
+            width=right_width,
+            height=bottom_height,
+            x_coord=parent.x + left_width,
+            y_coord=parent.y + top_height,
+            parent=parent,
+        )
 
 
 class QuadTreeNode(Generic[T]):
     def __init__(
         self,
         quadtree: QuadTree[T],
+        width: int,
+        height: int,
+        x_coord: int,
+        y_coord: int,
         value: Optional[T] = None,
         parent: Optional[QuadTreeNode[T]] = None,
     ):
+        self.__width: int = width
+        self.__height: int = height
+        self.__x: int = x_coord
+        self.__y: int = y_coord
         self.__value: Optional[T] = value
         self.quadtree: QuadTree[T] = quadtree
-        self.children_count = 0
+        self.descendant_count = 0
+        self.leaf_count = 1
         self.parent: Optional[QuadTreeNode[T]] = parent
         self.children: Optional[Children[T]] = None
 
@@ -33,6 +86,22 @@ class QuadTreeNode(Generic[T]):
 
     def is_leaf(self) -> bool:
         return self.children is None
+
+    @property
+    def width(self) -> int:
+        return self.__width
+
+    @property
+    def height(self) -> int:
+        return self.__height
+
+    @property
+    def x(self) -> int:
+        return self.__x
+
+    @property
+    def y(self) -> int:
+        return self.__y
 
     @property
     def value(self) -> Optional[T]:
@@ -84,11 +153,16 @@ class QuadTreeNode(Generic[T]):
             )
 
     def split(self) -> Self:
-        if self.children is None:
-            self.children = Children(self)
-            self._backtrack_children_count(4)
-            # Python GC will take care of deallocating the memory when the nodes are no longer referenced
+        if self.width <= 1 or self.height <= 1:
+            raise RuntimeError("[ERROR] Cannot split region of size 1xN or Nx1")
 
+        if self.children is not None:
+            raise RuntimeError("[ERROR] Node is already divided, cannot split again")
+
+        self.children = Children(self)
+        self._backtrack_descendant_count(4)
+        self._backtrack_leaf_count(3)
+        # Python GC will take care of deallocating the memory when the nodes are no longer referenced
         return self
 
     def insert_value(
@@ -113,18 +187,36 @@ class QuadTreeNode(Generic[T]):
 
         return self
 
-    def _backtrack_children_count(self, count: int) -> None:
-        self.children_count += count
+    def _backtrack_descendant_count(self, count: int) -> None:
+        self.descendant_count += count
         if self.parent is not None:
-            self.parent._backtrack_children_count(count)
+            self.parent._backtrack_descendant_count(count)
         else:
             self.quadtree.set_size(self.quadtree.size + count)
 
+    def _backtrack_leaf_count(self, count: int) -> None:
+        self.leaf_count += count
+        if self.parent is not None:
+            self.parent._backtrack_leaf_count(count)
+        else:
+            self.quadtree.set_leaf_count(self.quadtree.leaf_count + count)
+
 
 class QuadTree(Generic[T]):
-    def __init__(self, root_value: T):
-        self.root: QuadTreeNode[T] = QuadTreeNode(self, root_value)
+    def __init__(self, root_value: T, width: int, height: int):
+        self.root: QuadTreeNode[T] = QuadTreeNode(self, width, height, 0, 0, root_value)
+        self.__total_width: int = width
+        self.__total_height: int = height
         self.__size: int = 1
+        self.__leaf_count: int = 1
+
+    @property
+    def total_width(self) -> int:
+        return self.__total_width
+
+    @property
+    def total_height(self) -> int:
+        return self.__total_height
 
     @property
     def size(self) -> int:
@@ -138,3 +230,16 @@ class QuadTree(Generic[T]):
 
     def set_size(self, value: int) -> None:
         self.__size = value
+
+    @property
+    def leaf_count(self) -> int:
+        return self.__leaf_count
+
+    @leaf_count.setter
+    def leaf_count(self, _: int) -> None:
+        raise AttributeError(
+            "[ERROR] Leaf count is read-only and cannot be set directly. Use 'set_leaf_count(value)' instead"
+        )
+
+    def set_leaf_count(self, value: int) -> None:
+        self.__leaf_count = value

@@ -2,7 +2,7 @@ from typing import Optional
 
 from hierin.algorithms import HierINProcessor
 from hierin.io import ImageData, TargetsData
-from hierin.parsing import InstructionSetBuilder
+from hierin.parsing import InstructionSet, InstructionSetBuilder
 
 
 class Parser:
@@ -12,7 +12,7 @@ class Parser:
     ) -> HierINProcessor:
         instruction_set_builder = InstructionSetBuilder()
 
-        instruction_set = (
+        instruction_set: InstructionSet = (
             instruction_set_builder.with_base_depth(base_depth)
             .with_targets(targets.targets_list if targets else None)
             .build()

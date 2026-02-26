@@ -49,7 +49,7 @@ class ParsingController:
     def parse_processor(
         image_data: ImageData, base_depth: int, targets: Optional[TargetsData]
     ) -> HierINProcessor:
-        return Parser.parse_controller(image_data, base_depth, targets)
+        return Parser.parse_processor(image_data, base_depth, targets)
 
 
 class ProcessingController:
